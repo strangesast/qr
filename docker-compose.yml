@@ -1,0 +1,10 @@
+version: '3.7'
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - //f/:/usr/share/nginx/html
+    ports:
+      - '80:80'
