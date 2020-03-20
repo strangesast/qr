@@ -13,7 +13,7 @@ routes = web.RouteTableDef()
 
 @routes.get('/test')
 async def test_request(request: web.Request):
-    return web.Response(text='works')
+    return web.Response(text=dumps({'hello': 'world'}))
 
 
 @routes.get('/u')
@@ -25,16 +25,17 @@ async def get_urls(request: web.Request):
 
 @routes.post('/u')
 async def create_shortener(request: web.Request):
-    data = await request.post()
+    data = await request.json()
+    col = request.app['db'].url_shortener.urls
     if data and (url := data.get('url')):
-        doc = await app['db'].url_shortener.urls.find_one({'url': url});
+        doc = await col.find_one({'url': url});
         if doc:
             id = doc['_id']
         else:
-            res: InsertOneResult = await app['db'].url_shortener.urls.insert_one({'url': url})
+            res: InsertOneResult = await col.insert_one({'url': url})
             id = res.inserted_id
-        text = base64.urlsafe_b64encode(id.binary).decode()
-        return web.Response(text=text)
+        id = base64.urlsafe_b64encode(id.binary).decode()
+        return web.Response(text=dumps({'id': id}))
     return web.HTTPBadRequest()
 
 
@@ -43,7 +44,7 @@ async def get_shortener(request: web.Request):
     id = get_id(request)
     if id is None:
         return web.HTTPBadRequest()
-    doc = await app['db'].url_shortener.urls.find_one({'_id': id});
+    doc = await request.app['db'].url_shortener.urls.find_one({'_id': id});
     if doc is None:
         return web.HTTPNotFound()
     url = doc['url']
@@ -55,7 +56,7 @@ async def create_shortener(request: web.Request):
     id = get_id(request)
     if id is None:
         return web.HTTPBadRequest()
-    res: DeleteResult = await app['db'].url_shortener.urls.delete_one({'_id': id});
+    res: DeleteResult = await request.app['db'].url_shortener.urls.delete_one({'_id': id});
     if res.deleted_count == 1:
         return web.HTTPOk()
     return web.HTTPNotFound()
