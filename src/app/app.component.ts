@@ -1,32 +1,52 @@
-import { Component } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { FormBuilder, Validators } from '@angular/forms';
+import { takeUntil, filter, switchMap } from 'rxjs/operators';
+import { Observable, Subject } from 'rxjs';
+import QRCode from 'qrcode';
+
+// reader
+// npm install --save qr-scanner
+
 
 @Component({
   selector: 'app-root',
   template: `
-    <!--The content below is only a placeholder and can be replaced.-->
-    <div style="text-align:center" class="content">
-      <h1>
-        Welcome to {{title}}!
-      </h1>
-      <span style="display: block">{{ title }} app is running!</span>
-      <img width="300" alt="Angular Logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTAgMjUwIj4KICAgIDxwYXRoIGZpbGw9IiNERDAwMzEiIGQ9Ik0xMjUgMzBMMzEuOSA2My4ybDE0LjIgMTIzLjFMMTI1IDIzMGw3OC45LTQzLjcgMTQuMi0xMjMuMXoiIC8+CiAgICA8cGF0aCBmaWxsPSIjQzMwMDJGIiBkPSJNMTI1IDMwdjIyLjItLjFWMjMwbDc4LjktNDMuNyAxNC4yLTEyMy4xTDEyNSAzMHoiIC8+CiAgICA8cGF0aCAgZmlsbD0iI0ZGRkZGRiIgZD0iTTEyNSA1Mi4xTDY2LjggMTgyLjZoMjEuN2wxMS43LTI5LjJoNDkuNGwxMS43IDI5LjJIMTgzTDEyNSA1Mi4xem0xNyA4My4zaC0zNGwxNy00MC45IDE3IDQwLjl6IiAvPgogIDwvc3ZnPg==">
-    </div>
-    <h2>Here are some links to help you start: </h2>
-    <ul>
-      <li>
-        <h2><a target="_blank" rel="noopener" href="https://angular.io/tutorial">Tour of Heroes</a></h2>
-      </li>
-      <li>
-        <h2><a target="_blank" rel="noopener" href="https://angular.io/cli">CLI Documentation</a></h2>
-      </li>
-      <li>
-        <h2><a target="_blank" rel="noopener" href="https://blog.angular.io/">Angular blog</a></h2>
-      </li>
-    </ul>
-    <router-outlet></router-outlet>
+  <form [formGroup]="form">
+    <mat-form-field appearance="outline">
+      <input formControlName="input" type="text" matInput/>
+    </mat-form-field>
+  </form>
+  <svg width="200" height="200" [innerHTML]="svg"></svg>
   `,
-  styles: []
+  styles: [
+    `
+    :host {
+      display: block;
+      margin: 10px;
+    }
+    `,
+  ],
 })
-export class AppComponent {
-  title = 'qr';
+export class AppComponent implements OnInit, OnDestroy {
+  form = this.fb.group({input: ['', Validators.required]});
+
+  destroyed$ = new Subject();
+
+  svg: SafeHtml;
+
+  svg$: Observable<string> = this.form.get('input').valueChanges.pipe(
+    filter(text => text.length > 0),
+    switchMap(text => QRCode.toString(text, { errorCorrectionLevel: 'H', type: 'svg' }) as Promise<string>),
+  );
+
+  constructor(public fb: FormBuilder, public sanitizer: DomSanitizer) {}
+
+  ngOnInit() {
+    this.svg$.pipe(takeUntil(this.destroyed$)).subscribe(svg => this.svg = this.sanitizer.bypassSecurityTrustHtml(svg));
+  }
+  ngOnDestroy() {
+    this.destroyed$.next();
+    this.destroyed$.complete();
+  }
 }
