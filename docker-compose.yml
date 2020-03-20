@@ -5,6 +5,23 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - //f/:/usr/share/nginx/html
+      - share_f:/mnt/f
     ports:
-      - '80:80'
+      - '8080:80'
+#  client:
+#    build:
+#      context: .
+#      dockerfile: docker/client/Dockerfile
+#    image: strangesast/qr_client
+  server:
+    build:
+      context: .
+      dockerfile: docker/server/Dockerfile
+    image: strangesast/qr_server
+  db:
+    image: mongo
+    ports:
+      - 27017:27017
+volumes:
+  share_f:
+    external: true
