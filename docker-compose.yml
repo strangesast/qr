@@ -1,9 +1,9 @@
 version: '3.7'
 services:
-  nginx:
+  client:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: docker/client/Dockerfile
     volumes:
       - share_f:/mnt/f
     ports:
@@ -18,7 +18,10 @@ services:
       context: .
       dockerfile: docker/server/Dockerfile
     image: strangesast/qr_server
-  db:
+    environment:
+      - MONGO_HOST=mongo
+      - MONGO_PORT=27017
+  mongo:
     image: mongo
     ports:
       - 27017:27017
