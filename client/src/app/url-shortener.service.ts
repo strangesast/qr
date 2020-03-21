@@ -11,11 +11,11 @@ export class UrlShortenerService {
   }
 
   create(url: string) {
-    return this.http.post('/u', {url});
+    return this.http.post('/u/', {url});
   }
 
   list() {
-    return this.http.get<any[]>('/u');
+    return this.http.get<any[]>('/u/');
   }
 
   delete(id: string) {

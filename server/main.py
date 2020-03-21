@@ -16,14 +16,14 @@ async def test_request(request: web.Request):
     return web.Response(text=dumps({'hello': 'world'}))
 
 
-@routes.get('/u')
+@routes.get('/u/')
 async def get_urls(request: web.Request):
     urls = await request.app['db'].url_shortener.urls.find({}).to_list(None)
     urls = [{'id': base64.urlsafe_b64encode(doc['_id'].binary).decode(), 'url': doc['url']} for doc in urls]
     return web.Response(text=dumps(urls))
 
 
-@routes.post('/u')
+@routes.post('/u/')
 async def create_shortener(request: web.Request):
     data = await request.json()
     col = request.app['db'].url_shortener.urls
