@@ -28,9 +28,16 @@ import { UrlShortenerService } from './url-shortener.service';
   <svg width="200" height="200" [innerHTML]="svg"></svg>
   <div class="rows">
     <div *ngFor="let item of urls$ | async" class="row">
-      <svg width="80" height="80" [innerHTML]="item.qr"></svg>
-      <span>{{item.url}}</span>
-      <a [href]="item.link">{{item.id}}</a>
+      <img [src]="'/u/' + item.id + '.svg'"/>
+      <div>
+        <div class="top">
+          <h1>{{item.url}}</h1>
+          <p><a [href]="item.link">{{item.id}}</a></p>
+        </div>
+        <div>
+          <button (click)="print(item)" mat-stroked-button>Create label</button>
+        </div>
+      </div>
     </div>
   </div>
   `,
@@ -54,7 +61,11 @@ import { UrlShortenerService } from './url-shortener.service';
     }
     .rows > .row {
       display: flex;
-      flex-direction: row;
+    }
+    .rows > .row > div {
+      display: grid;
+      grid-gap: 12px;
+      margin: 20px 0;
     }
     `,
   ],
@@ -84,7 +95,7 @@ export class AppComponent implements OnInit, OnDestroy {
   );
 
   getQRCode(text: string): Promise<string> {
-    return QRCode.toString(text, { errorCorrectionLevel: 'H', type: 'svg' })
+    return QRCode.toString(text, { errorCorrectionLevel: 'L', type: 'svg' })
       .then(result => this.sanitizer.bypassSecurityTrustHtml(result));
   }
 
@@ -124,5 +135,47 @@ export class AppComponent implements OnInit, OnDestroy {
 
   refresh() {
     this.refresh$.next(null);
+  }
+
+  print(item) {
+    console.log('print');
+    const mywindow = window.open('', 'PRINT', 'height=300,width=600');
+
+
+    mywindow.document.write(`
+    <html>
+    <head>
+      <title>Label</title>
+      <style>
+      body {
+        margin: 10px;
+        display: grid;
+        grid-auto-flow: column;
+        align-items: center;
+        grid-template-columns: min-content auto;
+        box-sizing: border-box;
+        outline: 1px solid black;
+        width: 400px;
+        height: 120px;
+      }
+      body > h1 {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      </style>
+    </head>
+    <body>
+      <img width="120" height="120" src="/u/${item.id}.svg"/>
+      <h1>${item.url}</h1>
+    </body>
+    </html>
+      `);
+    mywindow.document.close(); // necessary for IE >= 10
+    mywindow.focus(); // necessary for IE >= 10*/
+
+    mywindow.print();
+    // mywindow.close();
+
+    return true;
   }
 }
