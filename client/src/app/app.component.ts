@@ -138,11 +138,8 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   print(item) {
-    console.log('print');
-    const mywindow = window.open('', 'PRINT', 'height=300,width=600');
-
-
-    mywindow.document.write(`
+    const w = window.open('', 'PRINT', 'height=300,width=600');
+    w.document.write(`
     <html>
     <head>
       <title>Label</title>
@@ -170,12 +167,8 @@ export class AppComponent implements OnInit, OnDestroy {
     </body>
     </html>
       `);
-    mywindow.document.close(); // necessary for IE >= 10
-    mywindow.focus(); // necessary for IE >= 10*/
-
-    mywindow.print();
-    // mywindow.close();
-
-    return true;
+    w.document.close();
+    w.focus();
+    w.print();
   }
 }

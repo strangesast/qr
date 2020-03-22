@@ -14,9 +14,7 @@ from aiojobs.aiohttp import setup, spawn
 from pymongo.results import DeleteResult, InsertOneResult
 
 DATA_DIR = ContextVar('DATA_DIR')
-ORIGIN = 'http://localhost:8081'
-base_url = f'{ORIGIN}/u'
-
+BASE_URL = ContextVar('BASE_URL')
 routes = web.RouteTableDef()
 
 @routes.get('/test')
@@ -80,6 +78,7 @@ async def create_shortener(request: web.Request):
 
 async def create_qr(id: str):
     factory = qrcode.image.svg.SvgPathImage
+    base_url = BASE_URL.get()
     url = f'{base_url}/{id}'
     img:qrcode.image.svg.SvgPathImage = qrcode.make(url, image_factory=factory)
     data_dir = DATA_DIR.get()
@@ -106,6 +105,8 @@ async def main():
     mongodb_url = f'mongodb://{host}:{port}'
     logging.info(f'using {mongodb_url=}')
     data_dir = Path(os.environ.get('DATA_DIR', Path(__file__).resolve().parent / 'data'))
+    origin = os.environ.get('ORIGIN', 'http://localhost:8081')
+    BASE_URL.set(f'{origin}/u')
     DATA_DIR.set(data_dir)
     data_dir.mkdir(parents=True, exist_ok=True)
     app['db'] = motor.motor_asyncio.AsyncIOMotorClient(mongodb_url)
