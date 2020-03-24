@@ -4,27 +4,31 @@ services:
     build:
       context: .
       dockerfile: docker/client/Dockerfile
+    image: strangesast/qr_client
     volumes:
       - share_f:/mnt/f
     ports:
       - '8080:80'
-#  client:
-#    build:
-#      context: .
-#      dockerfile: docker/client/Dockerfile
-#    image: strangesast/qr_client
+    restart: always
   server:
     build:
       context: .
       dockerfile: docker/server/Dockerfile
     image: strangesast/qr_server
     environment:
+      - ORIGIN=http://10.0.0.62:8080
       - MONGO_HOST=mongo
       - MONGO_PORT=27017
+    restart: always
   mongo:
     image: mongo
+    restart: always
+    volumes:
+      - qr_mongo:/data/db
     ports:
-      - 27017:27017
+      - 27018:27017
 volumes:
   share_f:
+    external: true
+  qr_mongo:
     external: true

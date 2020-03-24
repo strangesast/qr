@@ -179,7 +179,7 @@ export class AppComponent implements OnInit, OnDestroy {
     </head>
     <body>
       <img width="120" height="120" src="/u/${item.id}.svg"/>
-      <h1>${item.url}</h1>
+      <h1>${item.title || item.url}</h1>
     </body>
     </html>
       `);
