@@ -22,6 +22,10 @@ import { UrlShortenerService } from './url-shortener.service';
         <input formControlName="url" type="text" matInput/>
         <mat-hint>Enter a url</mat-hint>
       </mat-form-field>
+      <mat-form-field appearance="outline" class="title">
+        <input formControlName="title" type="text" matInput/>
+        <mat-hint>Title (optional)</mat-hint>
+      </mat-form-field>
       <button [disabled]="form.invalid" mat-stroked-button type="submit">Create</button>
     </div>
   </form>
@@ -31,12 +35,10 @@ import { UrlShortenerService } from './url-shortener.service';
       <img [src]="'/u/' + item.id + '.svg'"/>
       <div>
         <div class="top">
-          <h1>{{item.url}}</h1>
+          <h1><a [href]="item.url">{{item.title || item.url}}</a></h1>
           <p><a [href]="item.link">{{item.id}}</a></p>
         </div>
-        <div>
-          <button (click)="print(item)" mat-stroked-button>Create label</button>
-        </div>
+        <div><button (click)="print(item)" mat-stroked-button>Create label</button></div>
       </div>
     </div>
   </div>
@@ -67,6 +69,13 @@ import { UrlShortenerService } from './url-shortener.service';
       grid-gap: 12px;
       margin: 20px 0;
     }
+    .rows > .row a {
+      text-decoration: none;
+      color: inherit;
+    }
+    .rows > .row a:hover {
+      text-decoration: underline;
+    }
     `,
   ],
 })
@@ -78,10 +87,17 @@ export class AppComponent implements OnInit, OnDestroy {
       const link = `${window.location.origin}/u/${url.id}`;
       url.link = link;
       url.qr = await this.getQRCode(link);
-    })).then(() => urls))
+    })).then(() => (console.log(urls), urls)))
   );
 
-  form = this.fb.group({url: ['', Validators.compose([Validators.required, Validators.minLength(3)])]});
+  form = this.fb.group({
+    url: ['', Validators.compose([
+      Validators.required,
+      // Validators.minLength(3),
+      Validators.pattern(/^(ftp|http|https):\/\/[^ "]+$/),
+    ])],
+    title: [''],
+  });
 
   destroyed$ = new Subject();
 
@@ -121,8 +137,8 @@ export class AppComponent implements OnInit, OnDestroy {
 
   create() {
     if (this.form.valid) {
-      const { url } = this.form.value;
-      this.service.create(url).pipe(
+      const { url, title } = this.form.value;
+      this.service.create(url, title).pipe(
         finalize(() => {
           this.refresh();
           this.form.markAsPristine();

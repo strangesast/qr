@@ -38,10 +38,12 @@ async def create_shortener(request: web.Request):
             id = doc['id']
         else:
             _id = ObjectId()
-            id = base64.urlsafe_b64encode(_id.binary).decode()
-            #id = base64.urlsafe_b64encode(_id.binary[:4]).decode()
+            b = _id.binary
+            #b = b[:4]
+            id = base64.urlsafe_b64encode(b).decode()
             await spawn(request, create_qr(id))
-            await col.insert_one({'url': url, '_id': _id, 'id': id})
+            title = data.get('title', None)
+            await col.insert_one({'url': url, '_id': _id, 'id': id, 'title': title})
         return web.Response(text=dumps({'id': id}))
     return web.HTTPBadRequest()
 

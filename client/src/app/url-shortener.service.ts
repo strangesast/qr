@@ -10,8 +10,8 @@ export class UrlShortenerService {
     return this.http.get(`/u/${id}`);
   }
 
-  create(url: string) {
-    return this.http.post('/u/', {url});
+  create(url: string, title: string = null) {
+    return this.http.post('/u/', {url, title});
   }
 
   list() {
