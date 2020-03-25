@@ -1,8 +1,15 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 
+import { NewContainerComponent } from './new-container/new-container.component';
+import { AdvancedContainerComponent } from './advanced-container/advanced-container.component';
 
-const routes: Routes = [];
+
+const routes: Routes = [
+  {path: '', pathMatch: 'full', redirectTo: '/new'},
+  {path: 'new', component: NewContainerComponent},
+  {path: 'edit', component: AdvancedContainerComponent},
+];
 
 @NgModule({
   imports: [RouterModule.forRoot(routes)],

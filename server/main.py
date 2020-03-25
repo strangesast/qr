@@ -8,10 +8,11 @@ import qrcode.image.svg
 from aiohttp import web
 import motor.motor_asyncio
 from bson.json_util import dumps
+from pymongo import ReturnDocument
 from bson.objectid import ObjectId
 from contextvars import ContextVar
 from aiojobs.aiohttp import setup, spawn
-from pymongo.results import DeleteResult, InsertOneResult
+from pymongo.results import DeleteResult, InsertOneResult, UpdateResult
 
 DATA_DIR = ContextVar('DATA_DIR')
 BASE_URL = ContextVar('BASE_URL')
@@ -48,11 +49,40 @@ async def create_shortener(request: web.Request):
     return web.HTTPBadRequest()
 
 
+@routes.put('/u/')
+async def update_shortener(request: web.Request):
+    data = await request.json()
+    col = request.app['db'].url_shortener.urls
+    if not data:
+        return web.HTTPBadRequest()
+
+    try:
+        id = data.get('id')
+        assert id is not None
+        _id = base64.urlsafe_b64decode(id).hex()
+        assert ObjectId.is_valid(_id)
+        _id = ObjectId(_id)
+    except:
+        return web.HTTPBadRequest()
+
+    q = {'_id': _id, 'id': base64.urlsafe_b64encode(_id.binary).decode()}
+    arg = {'$set': {k: data[k] for k in ['url', 'title', 'count'] if k in data}}
+
+    res = await col.update_one(q, arg, upsert=True)
+    if res.upserted_id:
+        await spawn(request, create_qr(id))
+    
+    return web.Response(text=dumps({'id': id}))
+
+
 @routes.get('/u/{id}.svg')
 async def get_shortener_svg(request: web.Request):
     id = request.match_info['id']
     data_dir = DATA_DIR.get()
-    return web.FileResponse(data_dir / f'{id}.svg')
+    try:
+        return web.FileResponse(data_dir / f'{id}.svg')
+    except:
+        return web.HTTPNotFound()
 
 
 @routes.get('/u/{id}')

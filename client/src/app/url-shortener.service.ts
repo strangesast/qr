@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { mapTo } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -12,6 +13,10 @@ export class UrlShortenerService {
 
   create(url: string, title: string = null) {
     return this.http.post('/u/', {url, title});
+  }
+
+  update(doc: Partial<{title: string, url: string, id: string}>) {
+    return this.http.put('/u/', doc, {responseType: 'text'}).pipe(mapTo(null));
   }
 
   list() {
