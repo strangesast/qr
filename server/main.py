@@ -97,12 +97,14 @@ async def get_shortener(request: web.Request):
     return web.HTTPTemporaryRedirect(url)
 
 
+@routes.view('/u/{id}/d')
 @routes.delete('/u/{id}')
-async def create_shortener(request: web.Request):
+async def remove_shortener(request: web.Request):
     id = request.match_info['id']
     if id is None:
         return web.HTTPBadRequest()
-    res: DeleteResult = await request.app['db'].url_shortener.urls.delete_one({'id': id});
+    col = request.app['db'].url_shortener.urls
+    res: DeleteResult = await col.delete_one({'id': id});
     if res.deleted_count == 1:
         return web.HTTPOk()
     return web.HTTPNotFound()
