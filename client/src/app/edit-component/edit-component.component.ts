@@ -4,24 +4,23 @@ import { FormBuilder, Validators } from '@angular/forms';
 @Component({
   selector: 'app-edit-component',
   template: `
-    <form [formGroup]="form" (submit)="onUpdate()">
-      <h1>Update or create shortened URL</h1>
-      <div class="fields">
-        <mat-form-field appearance="outline">
-          <input formControlName="id" type="text" matInput placeholder="An ID"/>
-          <mat-hint>Enter an ID (optional)</mat-hint>
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <input formControlName="url" type="text" matInput placeholder="http://some-url"/>
-          <mat-hint>Url</mat-hint>
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <input formControlName="title" type="text" matInput placeholder="A title."/>
-          <mat-hint>Title (optional)</mat-hint>
-        </mat-form-field>
-      </div>
-      <button [disabled]="form.invalid" mat-stroked-button type="submit">Create / Update</button>
-    </form>
+  <form [formGroup]="form" (submit)="onUpdate()">
+    <div class="fields">
+      <mat-form-field appearance="outline">
+        <input formControlName="id" type="text" matInput placeholder="An ID"/>
+        <mat-hint>Enter an ID (optional)</mat-hint>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <input formControlName="url" type="text" matInput placeholder="http://some-url"/>
+        <mat-hint>Url</mat-hint>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <input formControlName="title" type="text" matInput placeholder="A title."/>
+        <mat-hint>Title (optional)</mat-hint>
+      </mat-form-field>
+    </div>
+    <button [disabled]="form.invalid" mat-stroked-button type="submit">Create / Update</button>
+  </form>
   `,
   styles: [
     `

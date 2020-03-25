@@ -8,13 +8,19 @@ import { UrlShortenerService } from '../url-shortener.service';
 @Component({
   selector: 'app-advanced-container',
   template: `
-    <app-edit-component [value]="value" (update)="itemUpdated($event)"></app-edit-component>
-    <video #video></video>
+  <header>
+    <h1>Update or create shortened URL</h1>
+  </header>
+  <app-edit-component [value]="value" (update)="itemUpdated($event)"></app-edit-component>
+  <video #video></video>
   `,
   styles: [
     `
     :host {
       display: block;
+    }
+    header {
+      margin: 40px 12px 12px 20px;
     }
     `
   ]

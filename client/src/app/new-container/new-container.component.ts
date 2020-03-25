@@ -1,20 +1,25 @@
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
 import { FormBuilder, Validators } from '@angular/forms';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { filter, finalize, switchMap, takeUntil, tap } from 'rxjs/operators';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { Router } from '@angular/router';
+
 import QRCode from 'qrcode';
 
+import { QrPreviewDialogComponent, DialogData } from '../qr-preview-dialog/qr-preview-dialog.component';
 import { UrlShortenerService } from '../url-shortener.service';
 
 @Component({
   selector: 'app-new-container',
   template: `
-  <h1>URL Shortener Service</h1>
-  <p>Enter a url you wish to shorten.  A QR code will also be generated.</p>
+  <header class="form-header">
+    <h1>URL Shortener Service</h1>
+    <p>Enter a url you wish to shorten.  A QR code will also be generated.</p>
+  </header>
   <form [formGroup]="form" (submit)="create()">
-    <div class="row">
+    <div class="form-fields">
       <mat-form-field appearance="outline" class="url">
         <input formControlName="url" type="text" matInput/>
         <mat-hint>Enter a url</mat-hint>
@@ -23,97 +28,115 @@ import { UrlShortenerService } from '../url-shortener.service';
         <input formControlName="title" type="text" matInput/>
         <mat-hint>Title (optional)</mat-hint>
       </mat-form-field>
+    </div>
+    <div class="actions">
       <button [disabled]="form.invalid" mat-stroked-button type="submit">Create</button>
     </div>
   </form>
   <svg width="200" height="200" [innerHTML]="svg"></svg>
-  <div class="rows">
-    <div *ngFor="let item of urls$ | async" class="row">
-      <img [src]="'/u/' + item.id + '.svg'"/>
-      <div>
-        <div class="top">
-          <h1><a [href]="item.url">{{item.title || item.url}}</a></h1>
-          <p><a [href]="item.link">{{item.id}}</a></p>
-        </div>
-        <div class="bottom">
-          <div><button (click)="print(item)" mat-stroked-button>Create label</button></div>
-          <div>
-            <button mat-icon-button aria-label="Edit" (click)="edit(item)">
-              <mat-icon>create</mat-icon>
-            </button>
+  <ng-container *ngIf="urls$ | async as urls">
+    <header class="table-header">
+      <h1>{{urls.length}} Urls</h1>
+    </header>
+    <mat-table [dataSource]="urls">
+      <ng-container matColumnDef="qr">
+        <mat-cell *matCellDef="let item">
+          <div class="img-container">
+            <img [src]="item.link + '.svg'"/>
           </div>
-        </div>
-    </div>
-  </div>
+        </mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="title">
+        <mat-cell *matCellDef="let item"><a [href]="item.link" (click)="$event.stopPropagation()">{{item.title || item.url}}</a></mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="count">
+        <mat-cell *matCellDef="let item">
+          <span>{{item.count}}</span>
+        </mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="actions">
+        <mat-cell *matCellDef="let item">
+          <button mat-icon-button aria-label="Edit" (click)="edit(item)">
+            <mat-icon>create</mat-icon>
+          </button>
+          <button mat-icon-button aria-label="Print" (click)="service.print(item)">
+            <mat-icon>print</mat-icon>
+          </button>
+        </mat-cell>
+      </ng-container>
+      <mat-row mat-row *matRowDef="let item; columns: tableColumns;" (click)="openDialog(item)"></mat-row>
+    </mat-table>
+  </ng-container>
   `,
   styles: [
     `
     :host {
       display: block;
-      margin: 10px;
     }
-    form > .row > .url {
-      width: 400px;
+    header {
+      margin: 40px 12px 12px 20px;
     }
-    form > .row {
-    }
-    form > .row > *:not(:first-child) {
-      margin-left: 8px;
-    }
-    .rows {
-      display: flex;
-      flex-direction: column;
-    }
-    .rows > .row {
-      display: flex;
-    }
-    .rows > .row > div {
+    form > div.form-fields {
       display: grid;
+      max-width: 800px;
+      min-width: 0;
+      margin: 0 20px;
       grid-gap: 12px;
-      margin: 20px 0;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     }
-    .rows > .row a {
-      text-decoration: none;
-      color: inherit;
+    form > div.actions {
+      margin: 12px 20px;
     }
-    .rows > .row a:hover {
-      text-decoration: underline;
+    mat-table {
+      max-width: 800px;
     }
-    .rows > .row .bottom {
+    mat-table .img-container {
       display: flex;
       align-items: center;
+      justify-content: center;
+      max-height: 40px;
+    }
+    mat-table .img-container > img {
+      width: 32px;
+      height: 32px;
+    }
+    mat-table .mat-column-qr {
+      flex: 0 0 48px;
+    }
+    mat-table .mat-column-actions{
+      display: flex;
+      justify-content: center;
+      flex: 0 0 96px;
+    }
+    mat-table .mat-column-count {
+      display: flex;
+      justify-content: center;
+      flex: 0 0 40px;
+    }
+    mat-table mat-row {
+      cursor: pointer;
     }
     `,
   ]
 })
 export class NewContainerComponent implements OnInit, OnDestroy {
+  tableColumns = ['qr', 'title', 'count', 'actions'];
+  destroyed$ = new Subject();
   refresh$ = new BehaviorSubject(null);
-  urls$: Observable<{url: string, id: string}[]> = this.refresh$.pipe(
-    switchMap(() => this.service.list()),
-    switchMap(urls => Promise.all(urls.map(async (url) => {
-      const link = `${window.location.origin}/u/${url.id}`;
-      url.link = link;
-      url.qr = await this.getQRCode(link);
-    })).then(() => (console.log(urls), urls)))
-  );
-
+  urls$ = this.refresh$.pipe(switchMap(() => this.service.list()), takeUntil(this.destroyed$));
   form = this.fb.group({
     url: ['', Validators.compose([
       Validators.required,
-      // Validators.minLength(3),
       Validators.pattern(/^(ftp|http|https):\/\/[^ "]+$/),
     ])],
     title: [''],
   });
-
-  destroyed$ = new Subject();
 
   svg: SafeHtml;
 
   svg$: Observable<string> = this.form.get('url').valueChanges.pipe(
     filter(text => text != null && text.length > 0),
     switchMap(text => this.getQRCode(text)),
-    tap(svg => this.svg = svg),
     takeUntil(this.destroyed$),
   );
 
@@ -127,11 +150,13 @@ export class NewContainerComponent implements OnInit, OnDestroy {
     public sanitizer: DomSanitizer,
     public service: UrlShortenerService,
     public router: Router,
+    public dialog: MatDialog,
   ) {}
 
   ngOnInit() {
-    this.svg$.subscribe();
-    this.refresh();
+    // hideous
+    this.svg$.subscribe(svg => this.svg = svg);
+    this.urls$.pipe(tap(urls => console.log(urls))).subscribe();
   }
 
   ngOnDestroy() {
@@ -143,6 +168,17 @@ export class NewContainerComponent implements OnInit, OnDestroy {
     this.service.delete(id).pipe(
       finalize(() => this.refresh()),
     ).subscribe();
+  }
+
+  openDialog(item): void {
+    const dialogRef = this.dialog.open(QrPreviewDialogComponent, {
+      width: '400px',
+      data: {title: item.title || item.url, link: item.link},
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('The dialog was closed');
+      console.log(result);
+    });
   }
 
   create() {
@@ -165,40 +201,5 @@ export class NewContainerComponent implements OnInit, OnDestroy {
 
   refresh() {
     this.refresh$.next(null);
-  }
-
-  print(item) {
-    const w = window.open('', 'PRINT'); // , 'height=300,width=600');
-    w.document.write(`
-    <html>
-    <head>
-      <title>Label</title>
-      <style>
-      body {
-        margin: 10px;
-        display: grid;
-        grid-auto-flow: column;
-        align-items: center;
-        grid-template-columns: min-content auto;
-        box-sizing: border-box;
-        outline: 1px solid black;
-        width: 400px;
-        height: 120px;
-      }
-      body > h1 {
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      </style>
-    </head>
-    <body>
-      <img width="120" height="120" src="/u/${item.id}.svg"/>
-      <h1>${item.title || item.url}</h1>
-    </body>
-    </html>
-      `);
-    w.document.close();
-    w.focus();
-    w.print();
   }
 }

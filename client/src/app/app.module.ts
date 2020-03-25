@@ -10,13 +10,15 @@ import { MaterialModule } from './material.module';
 import { NewContainerComponent } from './new-container/new-container.component';
 import { AdvancedContainerComponent } from './advanced-container/advanced-container.component';
 import { EditComponentComponent } from './edit-component/edit-component.component';
+import { QrPreviewDialogComponent } from './qr-preview-dialog/qr-preview-dialog.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     NewContainerComponent,
     AdvancedContainerComponent,
-    EditComponentComponent
+    EditComponentComponent,
+    QrPreviewDialogComponent
   ],
   imports: [
     BrowserModule,

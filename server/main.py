@@ -25,7 +25,8 @@ async def test_request(request: web.Request):
 
 @routes.get('/u/')
 async def get_urls(request: web.Request):
-    urls = await request.app['db'].url_shortener.urls.find({}, {'_id': False}).to_list(None)
+    col = request.app['db'].url_shortener.urls_view
+    urls = await col.find({}, {'_id': False}).to_list(None)
     return web.Response(text=dumps(urls))
 
 
@@ -111,10 +112,17 @@ async def remove_shortener(request: web.Request):
 
 
 async def create_qr(id: str):
-    factory = qrcode.image.svg.SvgPathImage
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=0,
+        image_factory=qrcode.image.svg.SvgPathImage,
+    )
     base_url = BASE_URL.get()
-    url = f'{base_url}/{id}'
-    img:qrcode.image.svg.SvgPathImage = qrcode.make(url, image_factory=factory)
+    qr.add_data(base_url + id)
+    qr.make(fit=True)
+    img = qr.make_image()
     data_dir = DATA_DIR.get()
     img.save(data_dir / f'{id}.svg')
 
@@ -132,6 +140,21 @@ def on_cleanup(app):
     app['db'].close()
 
 
+async def initialize_db(db: motor.motor_asyncio.AsyncIOMotorClient):
+    await db.url_shortener.get_collection('urls_view').drop()
+    base_url = BASE_URL.get()
+    await db.url_shortener.command({
+        'create': 'urls_view',
+        'viewOn': 'urls',
+        'pipeline': [
+            {'$addFields': {'count': {'$ifNull': ['$count', 0]}, 'link': {'$concat': [base_url, '$id']}}},
+            {'$project': {'_id': 0}},
+            {'$sort': {'count': -1}},
+        ]
+    });
+
+
+
 async def main():
     app = web.Application()
     host = os.environ.get('MONGO_HOST', 'localhost')
@@ -140,11 +163,12 @@ async def main():
     logging.info(f'using {mongodb_url=}')
     data_dir = Path(os.environ.get('DATA_DIR', Path(__file__).resolve().parent / 'data'))
     origin = os.environ.get('ORIGIN', 'http://localhost:8081')
-    BASE_URL.set(f'{origin}/u')
+    BASE_URL.set(f'{origin}/u/')
     DATA_DIR.set(data_dir)
     data_dir.mkdir(parents=True, exist_ok=True)
     app['db'] = motor.motor_asyncio.AsyncIOMotorClient(mongodb_url)
     await refresh_svgs(app['db'])
+    await initialize_db(app['db'])
     col = app['db'].url_shortener.get_collection('urls')
     await col.create_index('url', unique=True)
     await col.create_index('id', unique=True)

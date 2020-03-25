@@ -5,6 +5,9 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatTableModule } from '@angular/material/table';
+import { MatDialogModule } from '@angular/material/dialog';
+
 
 
 const components = [
@@ -13,6 +16,8 @@ const components = [
   MatButtonModule,
   MatButtonToggleModule,
   MatIconModule,
+  MatTableModule,
+  MatDialogModule,
 ];
 
 @NgModule({
