@@ -33,7 +33,9 @@ import { UrlShortenerService } from '../url-shortener.service';
       <button [disabled]="form.invalid" mat-stroked-button type="submit">Create</button>
     </div>
   </form>
+  <!--
   <svg width="200" height="200" [innerHTML]="svg"></svg>
+  -->
   <ng-container *ngIf="urls$ | async as urls">
     <header class="table-header">
       <h1>{{urls.length}} Urls</h1>
@@ -56,10 +58,10 @@ import { UrlShortenerService } from '../url-shortener.service';
       </ng-container>
       <ng-container matColumnDef="actions">
         <mat-cell *matCellDef="let item">
-          <button mat-icon-button aria-label="Edit" (click)="edit(item)">
+          <button mat-icon-button aria-label="Edit" (click)="edit(item); $event.stopPropagation()">
             <mat-icon>create</mat-icon>
           </button>
-          <button mat-icon-button aria-label="Print" (click)="service.print(item)">
+          <button mat-icon-button aria-label="Print" (click)="service.print(item); $event.stopPropagation()">
             <mat-icon>print</mat-icon>
           </button>
         </mat-cell>
@@ -132,13 +134,12 @@ export class NewContainerComponent implements OnInit, OnDestroy {
     title: [''],
   });
 
-  svg: SafeHtml;
-
-  svg$: Observable<string> = this.form.get('url').valueChanges.pipe(
-    filter(text => text != null && text.length > 0),
-    switchMap(text => this.getQRCode(text)),
-    takeUntil(this.destroyed$),
-  );
+  // svg: SafeHtml;
+  // svg$: Observable<string> = this.form.get('url').valueChanges.pipe(
+  //   filter(text => text != null && text.length > 0),
+  //   switchMap(text => this.getQRCode(text)),
+  //   takeUntil(this.destroyed$),
+  // );
 
   getQRCode(text: string): Promise<string> {
     return QRCode.toString(text, { errorCorrectionLevel: 'L', type: 'svg' })
@@ -155,7 +156,7 @@ export class NewContainerComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     // hideous
-    this.svg$.subscribe(svg => this.svg = svg);
+    // this.svg$.subscribe(svg => this.svg = svg);
     this.urls$.pipe(tap(urls => console.log(urls))).subscribe();
   }
 
@@ -173,7 +174,11 @@ export class NewContainerComponent implements OnInit, OnDestroy {
   openDialog(item): void {
     const dialogRef = this.dialog.open(QrPreviewDialogComponent, {
       width: '400px',
-      data: {title: item.title || item.url, link: item.link},
+      data: {
+        title: item.title || item.url,
+        link: item.link,
+        id: item.id
+      },
     });
     dialogRef.afterClosed().subscribe(result => {
       console.log('The dialog was closed');

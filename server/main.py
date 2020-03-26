@@ -86,6 +86,16 @@ async def get_shortener_svg(request: web.Request):
         return web.HTTPNotFound()
 
 
+@routes.get('/u/{id}.json')
+async def get_shortener_json(request: web.Request):
+    id = request.match_info['id']
+    doc = await request.app['db'].url_shortener.urls_view.find_one({'id': id}, {'_id': 0});
+    if doc:
+        return web.Response(text=dumps(doc));
+    else:
+        return web.HTTPNotFound()
+
+
 @routes.get('/u/{id}')
 async def get_shortener(request: web.Request):
     id = request.match_info['id']

@@ -1,4 +1,8 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Injector } from '@angular/core';
+import { createCustomElement } from '@angular/elements';
+
+import { LabelComponent, LABEL_COMPONENT_SELECTOR } from './label/label.component';
+import { UrlShortenerService } from './url-shortener.service';
 // import QRCode from 'qrcode';
 
 // reader
@@ -7,15 +11,22 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 @Component({
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-  <router-outlet></router-outlet>
-  `,
+  template: `<router-outlet></router-outlet>`,
   styles: [
     `
     :host {
       display: block;
+      height: 100%;
+      overflow: auto;
     }
     `,
   ],
 })
-export class AppComponent {}
+export class AppComponent {
+  constructor(injector: Injector, service: UrlShortenerService) {
+    const labelComponent = createCustomElement(LabelComponent, { injector });
+    customElements.define(LABEL_COMPONENT_SELECTOR, labelComponent);
+    service.labelElement = {selector: LABEL_COMPONENT_SELECTOR, component: labelComponent};
+  }
+
+}

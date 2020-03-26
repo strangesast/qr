@@ -3,6 +3,8 @@ import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dial
 import { UrlShortenerService } from '../url-shortener.service';
 
 export interface DialogData {
+  id: string;
+  url: string;
   link: string;
   title: string;
 }
@@ -15,7 +17,7 @@ export interface DialogData {
     <div class="content">
       <img [src]="data.link + '.svg'"/>
       <h1>{{data.title}}</h1>
-      <p><a [href]="data.link">{{data.link}}</a></p>
+      <p><a [href]="data.link">{{data.id}}</a></p>
     </div>
   </div>
   <div mat-dialog-actions>
@@ -26,7 +28,7 @@ export interface DialogData {
     `
     .content {
       display: grid;
-      grid-template-columns: auto auto;
+      grid-template-columns: min-content auto;
       grid-template-rows: auto auto;
       grid-gap: 12px;
     }
