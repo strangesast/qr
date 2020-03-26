@@ -8,6 +8,7 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatTableModule } from '@angular/material/table';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 
 const components = [
@@ -19,6 +20,7 @@ const components = [
   MatTableModule,
   MatDialogModule,
   MatSnackBarModule,
+  MatSlideToggleModule,
 ];
 
 @NgModule({

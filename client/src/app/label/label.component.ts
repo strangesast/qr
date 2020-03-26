@@ -6,7 +6,7 @@ export const LABEL_COMPONENT_SELECTOR = 'printed-label';
   template: `
   <img [src]="link + '.svg'"/>
   <h1>{{title}}</h1>
-  <p><a [href]="url">{{url}}</a></p>
+  <p *ngIf="includeUrl"><a [href]="url">{{url}}</a></p>
   `,
   styles: [
     `
@@ -17,7 +17,7 @@ export const LABEL_COMPONENT_SELECTOR = 'printed-label';
       grid-auto-flow: column;
       align-items: center;
       grid-template-columns: min-content auto;
-      grid-template-rows: auto auto;
+      grid-template-rows: 1fr 1fr;
       box-sizing: border-box;
       outline: 1px solid black;
       width: 600px;
@@ -40,6 +40,9 @@ export const LABEL_COMPONENT_SELECTOR = 'printed-label';
   ],
 })
 export class LabelComponent implements OnInit {
+  @Input()
+  includeUrl = true;
+
   @Input()
   link: string;
 
