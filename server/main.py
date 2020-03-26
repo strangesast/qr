@@ -38,6 +38,7 @@ async def create_shortener(request: web.Request):
         doc = await col.find_one({'url': url});
         if doc:
             id = doc['id']
+            exists = True
         else:
             _id = ObjectId()
             b = _id.binary
@@ -46,7 +47,8 @@ async def create_shortener(request: web.Request):
             await spawn(request, create_qr(id))
             title = data.get('title', None)
             await col.insert_one({'url': url, '_id': _id, 'id': id, 'title': title})
-        return web.Response(text=dumps({'id': id}))
+            exists = False
+        return web.Response(text=dumps({'id': id, 'exists': exists}))
     return web.HTTPBadRequest()
 
 

@@ -2,9 +2,10 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { filter, finalize, switchMap, takeUntil, tap } from 'rxjs/operators';
+import { filter, last, switchMap, takeUntil, finalize, pluck, tap } from 'rxjs/operators';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { Router } from '@angular/router';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 import QRCode from 'qrcode';
 
@@ -152,6 +153,7 @@ export class NewContainerComponent implements OnInit, OnDestroy {
     public service: UrlShortenerService,
     public router: Router,
     public dialog: MatDialog,
+    private snackBar: MatSnackBar,
   ) {}
 
   ngOnInit() {
@@ -190,11 +192,18 @@ export class NewContainerComponent implements OnInit, OnDestroy {
     if (this.form.valid) {
       const { url, title } = this.form.value;
       this.service.create(url, title).pipe(
-        finalize(() => {
+        last(),
+        pluck('exists'),
+        tap(exists => {
           this.refresh();
           this.form.markAsPristine();
           this.form.markAsUntouched();
           this.form.reset({url: ''});
+          if (!exists) {
+            this.snackBar.open(`link for ${title || url} saved`, '', {duration: 5000});
+          } else {
+            this.snackBar.open(`link for ${title || url} already exists`, '', {duration: 5000});
+          }
         }),
       ).subscribe();
     }

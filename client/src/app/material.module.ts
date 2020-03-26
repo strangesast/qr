@@ -7,7 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatTableModule } from '@angular/material/table';
 import { MatDialogModule } from '@angular/material/dialog';
-
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 
 const components = [
@@ -18,6 +18,7 @@ const components = [
   MatIconModule,
   MatTableModule,
   MatDialogModule,
+  MatSnackBarModule,
 ];
 
 @NgModule({
