@@ -18,6 +18,7 @@ DATA_DIR = ContextVar('DATA_DIR')
 BASE_URL = ContextVar('BASE_URL')
 routes = web.RouteTableDef()
 
+
 @routes.get('/test')
 async def test_request(request: web.Request):
     return web.Response(text=dumps({'hello': 'world'}))
@@ -27,7 +28,11 @@ async def test_request(request: web.Request):
 async def get_urls(request: web.Request):
     col = request.app['db'].url_shortener.urls_view
     urls = await col.find({}, {'_id': False}).to_list(None)
-    return web.Response(text=dumps(urls))
+    stats = await col.aggregate([
+        {'$group': {'_id': None, 'countTotal': {'$sum': '$count'}, 'length': {'$sum': 1}}},
+        {'$project': {'_id': 0}},
+    ]).to_list(None)
+    return web.Response(text=dumps({'urls': urls, 'stats': stats[0]}))
 
 
 @routes.post('/u/')

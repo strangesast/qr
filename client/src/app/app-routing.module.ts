@@ -10,7 +10,7 @@ const routes: Routes = [
   {path: '', pathMatch: 'full', redirectTo: '/new'},
   {path: 'new', component: NewContainerComponent},
   {path: 'edit', component: AdvancedContainerComponent},
-  {path: 'print/:id', component: PrinterContainerComponent},
+  {path: 'print', component: PrinterContainerComponent},
   // {path: '**', redirectTo: '/'},
 ];
 

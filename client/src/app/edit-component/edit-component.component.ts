@@ -11,7 +11,7 @@ import { FormBuilder, Validators } from '@angular/forms';
         <mat-hint>Enter an ID (optional)</mat-hint>
       </mat-form-field>
       <mat-form-field appearance="outline">
-        <input formControlName="url" type="text" matInput placeholder="http://some-url"/>
+        <input formControlName="url" type="url" matInput placeholder="http://some-url"/>
         <mat-hint>Url</mat-hint>
       </mat-form-field>
       <mat-form-field appearance="outline">

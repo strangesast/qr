@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
-import { catchError, pluck, map, switchMap } from 'rxjs/operators';
+import { catchError, pluck, tap, map, switchMap } from 'rxjs/operators';
 
 import { UrlShortenerService } from '../url-shortener.service';
 
@@ -9,8 +9,8 @@ import { UrlShortenerService } from '../url-shortener.service';
   selector: 'app-printer-container',
   template: `
   <ng-container *ngIf="result$ | async as result; else loading">
-    <ng-container *ngIf="result.item != null; else notFound">
-      <printed-label [includeUrl]="includeUrl" [url]="result.item.url" [link]="result.item.link" [title]="result.item.title"></printed-label>
+    <ng-container *ngIf="result != null; else notFound">
+      <printed-label *ngFor="let item of result" [includeUrl]="includeUrl" [url]="item.url" [link]="item.link" [title]="item.title"></printed-label>
       <div class="actions noprint">
         <mat-slide-toggle [checked]="includeUrl" (change)="includeUrl = !includeUrl">Include url</mat-slide-toggle>
         <button mat-stroked-button (click)="print()">Print</button>
@@ -42,14 +42,16 @@ import { UrlShortenerService } from '../url-shortener.service';
 export class PrinterContainerComponent implements OnInit {
   includeUrl = true;
 
-  id$ = this.route.params.pipe(pluck('id'));
+  id$ = this.route.queryParams.pipe(
+    pluck('q'),
+    map(ids => Array.isArray(ids) ? ids : [ids]),
+  );
 
   result$ = this.id$.pipe(
-    switchMap(id => this.service.get(id).pipe(
+    switchMap(ids => this.service.getMany(ids).pipe(
       catchError(() => of(null)),
-      map(item => ({id, item})))
-    ),
-  );
+    )),
+  )
 
   constructor(public route: ActivatedRoute, public service: UrlShortenerService) { }
 
