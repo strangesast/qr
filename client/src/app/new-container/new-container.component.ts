@@ -49,7 +49,7 @@ import { UrlShortenerService } from '../url-shortener.service';
       <ng-container matColumnDef="qr">
         <mat-cell *matCellDef="let item">
           <div class="img-container">
-            <img [src]="item.link + '.svg'"/>
+            <img [src]="'/u/' + item.id + '.svg'"/>
           </div>
         </mat-cell>
       </ng-container>

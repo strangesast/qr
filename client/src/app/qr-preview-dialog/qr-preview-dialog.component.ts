@@ -15,7 +15,7 @@ export interface DialogData {
   template: `
   <div mat-dialog-content>
     <div class="content">
-      <img [src]="data.link + '.svg'"/>
+      <img [src]="'/u/' + data.id + '.svg'"/>
       <h1>{{data.title}}</h1>
       <p><a [href]="data.link">{{data.id}}</a></p>
     </div>

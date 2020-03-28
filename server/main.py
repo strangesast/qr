@@ -32,7 +32,7 @@ async def get_urls(request: web.Request):
         {'$group': {'_id': None, 'countTotal': {'$sum': '$count'}, 'length': {'$sum': 1}}},
         {'$project': {'_id': 0}},
     ]).to_list(None)
-    return web.Response(text=dumps({'urls': urls, 'stats': stats[0]}))
+    return web.Response(text=dumps({'urls': urls, 'stats': next(iter(stats), {}) }))
 
 
 @routes.post('/u/')

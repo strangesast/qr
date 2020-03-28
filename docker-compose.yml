@@ -7,6 +7,7 @@ services:
     image: strangesast/qr_client
     volumes:
       - share_f:/mnt/f
+      - qr_imgs:/mnt/data
     ports:
       - '8080:80'
     restart: always
@@ -15,6 +16,8 @@ services:
       context: .
       dockerfile: docker/server/Dockerfile
     image: strangesast/qr_server
+    volumes:
+      - qr_imgs:/app/data
     environment:
       - ORIGIN=http://10.0.0.62:8080
       - MONGO_HOST=mongo
@@ -32,3 +35,4 @@ volumes:
     external: true
   qr_mongo:
     external: true
+  qr_imgs:
